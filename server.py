@@ -40,6 +40,8 @@ def validate_purchase(club, competition, places):
         return False, 'Le nombre de places doit être un entier strictement positif.'
     if places > int(competition['numberOfPlaces']):
         return False, 'Il ne reste pas assez de places dans cette compétition.'
+    if places > int(club['points']):
+        return False, 'Vous ne disposez pas d\'assez de points pour cette réservation.'
     return True, 'ok'
 
 
