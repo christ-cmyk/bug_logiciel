@@ -14,6 +14,13 @@ def loadCompetitions():
          return listOfCompetitions
 
 
+def find_club_by_email(clubs_list, email):
+    for club in clubs_list:
+        if club['email'] == email:
+            return club
+    return None
+
+
 app = Flask(__name__)
 app.secret_key = 'something_special'
 
@@ -26,7 +33,10 @@ def index():
 
 @app.route('/showSummary',methods=['POST'])
 def showSummary():
-    club = [club for club in clubs if club['email'] == request.form['email']][0]
+    club = find_club_by_email(clubs, request.form.get('email', ''))
+    if club is None:
+        flash("Adresse email inconnue. Veuillez réessayer.")
+        return redirect(url_for('index'))
     return render_template('welcome.html',club=club,competitions=competitions)
 
 
