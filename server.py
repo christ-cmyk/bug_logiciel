@@ -35,11 +35,14 @@ def find_competition(competitions_list, name):
     return None
 
 
-def validate_purchase(club, competition, places):
+def validate_purchase(club, competition, places, already_booked=0):
     if places is None or places <= 0:
         return False, 'Le nombre de places doit être un entier strictement positif.'
     if places > MAX_PLACES_PER_BOOKING:
         return False, 'Vous ne pouvez pas réserver plus de 12 places par réservation.'
+    if already_booked + places > MAX_PLACES_PER_BOOKING:
+        return False, ('Vous ne pouvez pas dépasser 12 places au total '
+                       'pour une même compétition.')
     if places > int(competition['numberOfPlaces']):
         return False, 'Il ne reste pas assez de places dans cette compétition.'
     if places > int(club['points']):
@@ -54,6 +57,7 @@ app.secret_key = 'something_special'
 
 competitions = loadCompetitions()
 clubs = loadClubs()
+bookings = {}
 
 @app.route('/')
 def index():
@@ -87,12 +91,16 @@ def purchasePlaces():
         flash("Club ou compétition introuvable.")
         return redirect(url_for('index'))
     placesRequired = request.form.get('places', type=int)
-    ok, message = validate_purchase(club, competition, placesRequired)
+    key = (club['name'], competition['name'])
+    already_booked = bookings.get(key, 0)
+    ok, message = validate_purchase(
+        club, competition, placesRequired, already_booked)
     if not ok:
         flash(message)
         return render_template('welcome.html', club=club,
                                competitions=competitions)
     competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
+    bookings[key] = already_booked + placesRequired
     flash('Great-booking complete!')
     return render_template('welcome.html', club=club, competitions=competitions)
 

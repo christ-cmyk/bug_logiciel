@@ -84,3 +84,15 @@ def test_purchase_more_than_twelve_places_in_one_booking_is_rejected(client):
     response = _purchase(client, '13')
     assert response.status_code == 200
     assert _competition()['numberOfPlaces'] == '25'
+
+
+def test_cumulative_bookings_cannot_exceed_twelve(client):
+    _purchase(client, '8')
+    _purchase(client, '5')
+    assert int(_competition()['numberOfPlaces']) == 17
+
+
+def test_cumulative_bookings_up_to_twelve_are_allowed(client):
+    _purchase(client, '8')
+    _purchase(client, '4')
+    assert int(_competition()['numberOfPlaces']) == 13
