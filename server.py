@@ -1,18 +1,19 @@
 import json
 import os
-from flask import Flask,render_template,request,redirect,flash,url_for,session
+from flask import (Flask, render_template, request, redirect,
+                   flash, url_for, session)
 
 
 def loadClubs():
     with open('clubs.json') as c:
-         listOfClubs = json.load(c)['clubs']
-         return listOfClubs
+        listOfClubs = json.load(c)['clubs']
+        return listOfClubs
 
 
 def loadCompetitions():
     with open('competitions.json') as comps:
-         listOfCompetitions = json.load(comps)['competitions']
-         return listOfCompetitions
+        listOfCompetitions = json.load(comps)['competitions']
+        return listOfCompetitions
 
 
 def find_club_by_email(clubs_list, email):
@@ -60,11 +61,13 @@ competitions = loadCompetitions()
 clubs = loadClubs()
 bookings = {}
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/showSummary',methods=['POST'])
+
+@app.route('/showSummary', methods=['POST'])
 def showSummary():
     club = find_club_by_email(clubs, request.form.get('email', ''))
     if club is None:
@@ -72,27 +75,27 @@ def showSummary():
         return redirect(url_for('index'))
     session['club'] = club['name']
     session['club_email'] = club['email']
-    return render_template('welcome.html',club=club,competitions=competitions)
+    return render_template('welcome.html', club=club, competitions=competitions)
 
 
 @app.route('/book/<competition>/<club>')
-def book(competition,club):
+def book(competition, club):
     foundClub = find_club_by_name(clubs, club)
     foundCompetition = find_competition(competitions, competition)
     if foundClub is None or foundCompetition is None:
         flash("Club ou compétition introuvable.")
         return redirect(url_for('index'))
     session_club = session.get('club')
-    if session_club and session_club != foundClub['name']:
-        flash("Accès non autorisé à cette réservation.")
-        return redirect(url_for('index'))
     if session_club is None:
         flash("Veuillez vous connecter.")
         return redirect(url_for('index'))
-    return render_template('booking.html',club=foundClub,competition=foundCompetition)
+    if session_club != foundClub['name']:
+        flash("Accès non autorisé à cette réservation.")
+        return redirect(url_for('index'))
+    return render_template('booking.html', club=foundClub, competition=foundCompetition)
 
 
-@app.route('/purchasePlaces',methods=['POST'])
+@app.route('/purchasePlaces', methods=['POST'])
 def purchasePlaces():
     competition = find_competition(
         competitions, request.form.get('competition', ''))
@@ -113,7 +116,7 @@ def purchasePlaces():
         flash(message)
         return render_template('welcome.html', club=club,
                                competitions=competitions)
-    competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
+    competition['numberOfPlaces'] = int(competition['numberOfPlaces']) - placesRequired
     club['points'] = int(club['points']) - placesRequired
     bookings[key] = already_booked + placesRequired
     flash(f'Reservation reussie : {placesRequired} place(s) reservee(s).')
@@ -121,6 +124,8 @@ def purchasePlaces():
 
 
 @app.route('/points')
+
+
 @app.route('/clubs-points')
 def points():
     return render_template('points.html', clubs=clubs)
@@ -130,3 +135,4 @@ def points():
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
