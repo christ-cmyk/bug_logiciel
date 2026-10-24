@@ -106,3 +106,10 @@ def test_purchase_deducts_points_from_club(client):
 def test_purchase_decrements_competition_places(client):
     _purchase(client, '3')
     assert int(_competition()['numberOfPlaces']) == 22
+
+
+def test_purchase_shows_number_of_places_confirmed(client):
+    response = _purchase(client, '3')
+    assert response.status_code == 200
+    assert b'3' in response.data
+    assert b'Reservation reussie' in response.data
