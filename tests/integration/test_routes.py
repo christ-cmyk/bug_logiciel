@@ -78,3 +78,9 @@ def test_purchase_more_places_than_club_points_is_rejected(client):
     assert response.status_code == 200
     assert _competition('Fall Classic')['numberOfPlaces'] == '13'
     assert _club('Iron Temple')['points'] == '4'
+
+
+def test_purchase_more_than_twelve_places_in_one_booking_is_rejected(client):
+    response = _purchase(client, '13')
+    assert response.status_code == 200
+    assert _competition()['numberOfPlaces'] == '25'

@@ -38,12 +38,16 @@ def find_competition(competitions_list, name):
 def validate_purchase(club, competition, places):
     if places is None or places <= 0:
         return False, 'Le nombre de places doit être un entier strictement positif.'
+    if places > MAX_PLACES_PER_BOOKING:
+        return False, 'Vous ne pouvez pas réserver plus de 12 places par réservation.'
     if places > int(competition['numberOfPlaces']):
         return False, 'Il ne reste pas assez de places dans cette compétition.'
     if places > int(club['points']):
         return False, 'Vous ne disposez pas d\'assez de points pour cette réservation.'
     return True, 'ok'
 
+
+MAX_PLACES_PER_BOOKING = 12
 
 app = Flask(__name__)
 app.secret_key = 'something_special'
