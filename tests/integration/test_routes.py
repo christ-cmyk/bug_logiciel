@@ -135,3 +135,11 @@ def test_logout_clears_session(client, login):
     assert response.status_code == 302
     with client.session_transaction() as sess:
         assert 'club' not in sess
+
+
+def test_public_points_board_is_accessible_without_login(client):
+    response = client.get('/points')
+    assert response.status_code == 200
+    assert b'Simply Lift' in response.data
+    assert b'Iron Temple' in response.data
+    assert b'She Lifts' in response.data
