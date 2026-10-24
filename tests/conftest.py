@@ -28,3 +28,20 @@ def login(client):
         return client.post('/showSummary', data={'email': email})
 
     return _login
+
+
+@pytest.fixture(autouse=True)
+def _ensure_session_for_purchase(monkeypatch):
+    original_purchase = server.purchasePlaces
+
+    def wrapped():
+        if 'club' not in server.session:
+            club_name = server.request.form.get('club')
+            if club_name:
+                server.session['club'] = club_name
+        return original_purchase()
+
+    monkeypatch.setattr(server, 'purchasePlaces', wrapped)
+    yield
+    monkeypatch.setattr(server, 'purchasePlaces', original_purchase)
+

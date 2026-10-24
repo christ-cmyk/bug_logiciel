@@ -1,5 +1,6 @@
 import json
-from flask import Flask,render_template,request,redirect,flash,url_for
+import os
+from flask import Flask,render_template,request,redirect,flash,url_for,session
 
 
 def loadClubs():
@@ -53,7 +54,7 @@ def validate_purchase(club, competition, places, already_booked=0):
 MAX_PLACES_PER_BOOKING = 12
 
 app = Flask(__name__)
-app.secret_key = 'something_special'
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-fallback')
 
 competitions = loadCompetitions()
 clubs = loadClubs()
@@ -69,6 +70,8 @@ def showSummary():
     if club is None:
         flash("Adresse email inconnue. Veuillez réessayer.")
         return redirect(url_for('index'))
+    session['club'] = club['name']
+    session['club_email'] = club['email']
     return render_template('welcome.html',club=club,competitions=competitions)
 
 
@@ -78,6 +81,13 @@ def book(competition,club):
     foundCompetition = find_competition(competitions, competition)
     if foundClub is None or foundCompetition is None:
         flash("Club ou compétition introuvable.")
+        return redirect(url_for('index'))
+    session_club = session.get('club')
+    if session_club and session_club != foundClub['name']:
+        flash("Accès non autorisé à cette réservation.")
+        return redirect(url_for('index'))
+    if session_club is None:
+        flash("Veuillez vous connecter.")
         return redirect(url_for('index'))
     return render_template('booking.html',club=foundClub,competition=foundCompetition)
 
@@ -89,6 +99,10 @@ def purchasePlaces():
     club = find_club_by_name(clubs, request.form.get('club', ''))
     if club is None or competition is None:
         flash("Club ou compétition introuvable.")
+        return redirect(url_for('index'))
+    session_club = session.get('club')
+    if session_club is None or session_club != club['name']:
+        flash("Accès non autorisé.")
         return redirect(url_for('index'))
     placesRequired = request.form.get('places', type=int)
     key = (club['name'], competition['name'])
@@ -111,4 +125,5 @@ def purchasePlaces():
 
 @app.route('/logout')
 def logout():
+    session.clear()
     return redirect(url_for('index'))

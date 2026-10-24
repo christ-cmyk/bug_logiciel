@@ -3,6 +3,8 @@ import server
 
 def _purchase(client, places, club='Simply Lift',
               competition='Spring Festival'):
+    with client.session_transaction() as sess:
+        sess['club'] = club
     return client.post('/purchasePlaces', data={
         'club': club,
         'competition': competition,
@@ -43,6 +45,8 @@ def test_book_unknown_competition_does_not_crash(client):
 
 
 def test_book_valid_competition_and_club_displays_booking(client):
+    with client.session_transaction() as sess:
+        sess['club'] = 'Simply Lift'
     response = client.get('/book/Spring Festival/Simply Lift')
     assert response.status_code == 200
     assert b'Spring Festival' in response.data
@@ -113,3 +117,19 @@ def test_purchase_shows_number_of_places_confirmed(client):
     assert response.status_code == 200
     assert b'3' in response.data
     assert b'Reservation reussie' in response.data
+
+
+def test_purchase_without_session_is_blocked(client):
+    response = client.post('/purchasePlaces', data={
+        'club': 'Simply Lift',
+        'competition': 'Spring Festival',
+        'places': '1',
+    })
+    assert response.status_code in (302, 400)
+    assert _competition()['numberOfPlaces'] == '25'
+
+
+def test_logout_clears_session(client, login):
+    login('john@simplylift.co')
+    response = client.get('/logout')
+    assert response.status_code == 302
