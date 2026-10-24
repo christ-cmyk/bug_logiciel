@@ -96,3 +96,13 @@ def test_cumulative_bookings_up_to_twelve_are_allowed(client):
     _purchase(client, '8')
     _purchase(client, '4')
     assert int(_competition()['numberOfPlaces']) == 13
+
+
+def test_purchase_deducts_points_from_club(client):
+    _purchase(client, '3')
+    assert int(_club()['points']) == 10
+
+
+def test_purchase_decrements_competition_places(client):
+    _purchase(client, '3')
+    assert int(_competition()['numberOfPlaces']) == 22
