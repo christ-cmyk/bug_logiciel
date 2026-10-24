@@ -35,6 +35,12 @@ def find_competition(competitions_list, name):
     return None
 
 
+def validate_purchase(club, competition, places):
+    if places is None or places <= 0:
+        return False, 'Le nombre de places doit être un entier strictement positif.'
+    return True, 'ok'
+
+
 app = Flask(__name__)
 app.secret_key = 'something_special'
 
@@ -66,9 +72,18 @@ def book(competition,club):
 
 @app.route('/purchasePlaces',methods=['POST'])
 def purchasePlaces():
-    competition = [c for c in competitions if c['name'] == request.form['competition']][0]
-    club = [c for c in clubs if c['name'] == request.form['club']][0]
-    placesRequired = int(request.form['places'])
+    competition = find_competition(
+        competitions, request.form.get('competition', ''))
+    club = find_club_by_name(clubs, request.form.get('club', ''))
+    if club is None or competition is None:
+        flash("Club ou compétition introuvable.")
+        return redirect(url_for('index'))
+    placesRequired = request.form.get('places', type=int)
+    ok, message = validate_purchase(club, competition, placesRequired)
+    if not ok:
+        flash(message)
+        return render_template('welcome.html', club=club,
+                               competitions=competitions)
     competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
     flash('Great-booking complete!')
     return render_template('welcome.html', club=club, competitions=competitions)
