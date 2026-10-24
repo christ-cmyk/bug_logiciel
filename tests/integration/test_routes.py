@@ -64,3 +64,9 @@ def test_purchase_negative_places_is_rejected(client):
     response = _purchase(client, '-3')
     assert response.status_code == 200
     assert _competition()['numberOfPlaces'] == '25'
+
+
+def test_purchase_more_places_than_available_is_rejected(client):
+    response = _purchase(client, '30')
+    assert response.status_code == 200
+    assert _competition()['numberOfPlaces'] == '25'

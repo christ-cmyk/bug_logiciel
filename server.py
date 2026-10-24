@@ -38,6 +38,8 @@ def find_competition(competitions_list, name):
 def validate_purchase(club, competition, places):
     if places is None or places <= 0:
         return False, 'Le nombre de places doit être un entier strictement positif.'
+    if places > int(competition['numberOfPlaces']):
+        return False, 'Il ne reste pas assez de places dans cette compétition.'
     return True, 'ok'
 
 
