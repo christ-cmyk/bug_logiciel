@@ -133,3 +133,5 @@ def test_logout_clears_session(client, login):
     login('john@simplylift.co')
     response = client.get('/logout')
     assert response.status_code == 302
+    with client.session_transaction() as sess:
+        assert 'club' not in sess
