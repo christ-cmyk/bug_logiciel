@@ -1,0 +1,20 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: C:\Users\Utilisateur\OneDrive\Bureau\Prjt_L3\test_validation_log\prj1_bug\Python_Testing_2627
+configfile: pytest.ini
+testpaths: tests
+plugins: locust-2.47.0, cov-7.1.0
+collected 19 items
+
+tests\integration\test_routes.py ...................                     [100%]
+
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.13.3-final-0 _______________
+
+Name        Stmts   Miss  Cover   Missing
+-----------------------------------------
+server.py     102      8    92%   49, 67, 90-91, 93-94, 104-105
+-----------------------------------------
+TOTAL         102      8    92%
+Coverage HTML written to dir htmlcov
+============================= 19 passed in 1.67s ==============================
