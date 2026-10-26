@@ -4,3 +4,5 @@ pytest-cov
 coverage
 flake8
 locust
+pytest-html
+flake8-html

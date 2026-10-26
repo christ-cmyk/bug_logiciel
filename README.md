@@ -1,31 +1,60 @@
 # GUDLFT - Plateforme de réservation de compétitions (POC)
 
-Ce projet est un Proof of Concept (POC) d'une application web permettant aux secrétaires de clubs de réserver des places pour des compétitions sportives en utilisant les points accumulés par leur club.
+## 📖 Description
 
-## Prérequis
-- Python 3.x
-- Flask
+GUDLFT est un Proof of Concept (POC) d'une application web Flask permettant aux secrétaires de clubs sportifs de réserver des places pour des compétitions en utilisant les points accumulés par leur club.
 
-## Installation
-1. Créer un environnement virtuel : `python -m venv venv`
-2. Activer l'environnement : `venv\Scripts\activate` (Windows) ou `source venv/bin/activate` (Mac/Linux)
-3. Installer les dépendances : `pip install -r requirements.txt` et `pip install -r requirements-dev.txt`
+## 🚀 Installation et Lancement
 
-## Lancement de l'application
-`flask --app server run`
-L'application sera accessible à l'adresse : http://127.0.0.1:5000
+1. Cloner le projet et créer un environnement virtuel :
 
-## Lancement des tests
-Pour vérifier la couverture de code :
-`pytest --cov=server --cov-report=term-missing --cov-report=html`
-Le rapport HTML sera généré dans le dossier `htmlcov/`.
+```bash
+python -m venv venv
+source venv/bin/activate  # ou venv\Scripts\activate sur Windows
+```
 
-## Tests de performance (Locust)
-Pour lancer les tests avec 6 utilisateurs simultanés :
-`locust -f locustfile.py --headless -u 6 -r 1 --run-time 1m --host http://127.0.0.1:5000`
+2. Installer les dépendances :
 
-## Structure du projet
-- `server.py` : Application Flask et logique métier
-- `templates/` : Fichiers HTML (Jinja2)
-- `tests/` : Tests unitaires, d'intégration et fonctionnels
-- `rapports/` : Rapports QA (tests, performances, flake8)
+```bash
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+```
+
+3. Lancer l'application :
+
+```bash
+flask --app server run
+```
+
+L'application est accessible sur http://127.0.0.1:5000.
+
+## 🧪 Qualité et Tests
+
+Le projet a été développé en suivant une approche TDD (Test-Driven Development).
+
+- **Couverture de code** : 91% (Objectif : 60%)
+- **Tests** : 23 tests (unitaires, intégration, fonctionnels)
+- **Qualité** : 0 erreur Flake8
+
+### Rapports détaillés
+
+Tous les rapports sont disponibles dans le dossier `rapports/` :
+
+- [🧪 Rapport de tests (Pytest)](rapports/rapport-tests.html)
+- [📊 Rapport de couverture de code](rapports/couverture-html/index.html)
+- [🧹 Rapport de qualité (Flake8)](rapports/flake8-html/index.html)
+- [🚀 Rapport de performance (Locust)](rapports/rapport-locust.html)
+
+## 🛡️ Sécurité
+
+- Protection contre l'IDOR (Insecure Direct Object Reference) via l'utilisation de sessions Flask.
+- Validation stricte des entrées utilisateur (places > 0, places <= 12, places <= points).
+- Clé secrète gérée via variable d'environnement.
+
+## ✨ Fonctionnalités (Phase 2 & Améliorations)
+
+- Tableau public des points (accessible sans connexion).
+- Historique des réservations par club.
+- Mode sombre (Dark Mode).
+- Filtre des compétitions (disponibles / complètes).
+- Interface moderne et responsive (Bootstrap 5).

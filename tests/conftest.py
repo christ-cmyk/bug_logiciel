@@ -44,4 +44,3 @@ def _ensure_session_for_purchase(monkeypatch):
     monkeypatch.setattr(server, 'purchasePlaces', wrapped)
     yield
     monkeypatch.setattr(server, 'purchasePlaces', original_purchase)
-
