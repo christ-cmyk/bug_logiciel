@@ -85,15 +85,17 @@
 
                         <div class="mb-4">
                             <label for="places" class="form-label fw-500">
-                                <i class="bi bi-hash me-1"></i> Nombre de places (max 12)
+                                <i class="bi bi-hash me-1"></i> Nombre de places
                             </label>
                             <input type="number" name="places" id="places"
                                    class="form-control form-control-lg rounded-3"
-                                   min="1" max="12" placeholder="1"
+                                   min="1" max="{{ max_places_allowed }}"
+                                   placeholder="1"
+                                   {% if max_places_allowed < 1 %}disabled{% endif %}
                                    required>
                             <div class="form-text mt-1">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Maximum 12 places par réservation.
+                                Vous pouvez réserver au maximum {{ max_places_allowed }} place(s).
                             </div>
                         </div>
 

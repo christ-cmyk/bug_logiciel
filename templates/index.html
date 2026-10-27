@@ -14,20 +14,66 @@
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
             background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            background-attachment: fixed;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 1.5rem;
+            overflow-x: hidden;
+            position: relative;
         }
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.45;
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::before {
+            top: -140px;
+            left: -120px;
+            background: radial-gradient(circle, #667eea, transparent 70%);
+        }
+        body::after {
+            bottom: -160px;
+            right: -120px;
+            background: radial-gradient(circle, #764ba2, transparent 70%);
+        }
+        .container { position: relative; z-index: 1; }
         .login-card {
             border: none;
-            border-radius: 20px;
-            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .login-card:hover {
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
         }
         [data-bs-theme="light"] .login-card {
             background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        [data-bs-theme="dark"] .login-card {
+            background: rgba(20, 20, 35, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        [data-bs-theme="dark"] .login-card .form-label,
+        [data-bs-theme="dark"] .login-card h1,
+        [data-bs-theme="dark"] .login-card .subtitle {
+            color: #fff;
+        }
+        @media (max-width: 576px) {
+            .login-card { border-radius: 18px; }
+            .brand-icon { width: 60px; height: 60px; font-size: 1.6rem; }
         }
         .brand-icon {
             width: 72px;

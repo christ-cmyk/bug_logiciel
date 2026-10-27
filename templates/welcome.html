@@ -67,6 +67,50 @@
         /* Dark mode toggle */
         #darkModeBtn { transition: all 0.3s; }
 
+        /* Dashboard stats */
+        .stat-card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.14);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            color: #fff;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .points-progress {
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(102, 126, 234, 0.15);
+        }
+        .points-progress .progress-bar {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 999px;
+        }
+        [data-bs-theme="dark"] .stat-card {
+            background: #1e1e2e;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+        }
+        [data-bs-theme="dark"] .competition-card {
+            background: #1e1e2e;
+        }
+
         /* Tabs */
         .nav-tabs .nav-link {
             font-weight: 500;
@@ -140,6 +184,55 @@
         <a href="{{ url_for('points') }}" class="btn btn-outline-secondary ms-auto rounded-pill">
             <i class="bi bi-trophy me-1"></i> Classement
         </a>
+    </div>
+
+    <!-- POINTS COUNTER / STATS -->
+    {% set points = club['points']|int %}
+    {% set points_pct = points if points <= 100 else 100 %}
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon"><i class="bi bi-star-fill"></i></div>
+                    <div class="flex-grow-1">
+                        <div class="text-muted small text-uppercase">Points du club</div>
+                        <div class="stat-value mb-2">{{ points }}</div>
+                        <div class="progress points-progress">
+                            <div class="progress-bar" role="progressbar"
+                                 style="width: {{ points_pct }}%"
+                                 aria-valuenow="{{ points }}"
+                                 aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background: linear-gradient(135deg,#11998e,#38ef7d);">
+                        <i class="bi bi-calendar-event"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase">Compétitions</div>
+                        <div class="stat-value">{{ competitions|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background: linear-gradient(135deg,#f7971e,#ffd200); color:#333;">
+                        <i class="bi bi-ticket-perforated"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase">Mes réservations</div>
+                        <div class="stat-value">{{ club_bookings|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- FILTER TABS -->

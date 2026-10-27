@@ -38,6 +38,30 @@ def find_competition(competitions_list, name):
     return None
 
 
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+
+
+def parse_competition_date(competition):
+    try:
+        return datetime.strptime(str(competition['date']), DATE_FORMAT)
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def is_competition_past(competition):
+    competition_date = parse_competition_date(competition)
+    return competition_date is not None and competition_date < datetime.now()
+
+
+def sort_competitions_by_date(competitions_list):
+    return sorted(
+        competitions_list,
+        key=lambda competition: (
+            parse_competition_date(competition) or datetime.max
+        )
+    )
+
+
 def validate_purchase(club, competition, places, already_booked=0):
     if places is None or places <= 0:
         return False, 'Le nombre de places doit être un entier strictement positif.'
@@ -95,7 +119,8 @@ def showSummary():
         k[1]: v for k, v in bookings.items() if k[0] == club['name']
     }
     return render_template('welcome.html', club=club,
-                           competitions=competitions,
+                           competitions=sort_competitions_by_date(
+                               competitions),
                            club_bookings=club_bookings)
 
 
@@ -113,8 +138,20 @@ def book(competition, club):
     if session_club != foundClub['name']:
         flash("Accès non autorisé à cette réservation.", 'danger')
         return redirect(url_for('index'))
+    if is_competition_past(foundCompetition):
+        flash("Cette compétition est déjà terminée.", 'danger')
+        return redirect(url_for('index'))
+    key = (foundClub['name'], foundCompetition['name'])
+    already_booked = bookings.get(key, 0)
+    max_places_allowed = max(0, min(
+        MAX_PLACES_PER_BOOKING,
+        int(foundCompetition['numberOfPlaces']),
+        int(foundClub['points']),
+        MAX_PLACES_PER_BOOKING - already_booked,
+    ))
     return render_template('booking.html', club=foundClub,
-                           competition=foundCompetition)
+                           competition=foundCompetition,
+                           max_places_allowed=max_places_allowed)
 
 
 @app.route('/purchasePlaces', methods=['POST'])
@@ -129,6 +166,15 @@ def purchasePlaces():
     if session_club is None or session_club != club['name']:
         flash("Accès non autorisé.", 'danger')
         return redirect(url_for('index'))
+    if is_competition_past(competition):
+        flash("Cette compétition est déjà terminée.", 'danger')
+        club_bookings = {
+            k[1]: v for k, v in bookings.items() if k[0] == club['name']
+        }
+        return render_template('welcome.html', club=club,
+                               competitions=sort_competitions_by_date(
+                                   competitions),
+                               club_bookings=club_bookings)
     placesRequired = request.form.get('places', type=int)
     key = (club['name'], competition['name'])
     already_booked = bookings.get(key, 0)
@@ -140,7 +186,8 @@ def purchasePlaces():
             k[1]: v for k, v in bookings.items() if k[0] == club['name']
         }
         return render_template('welcome.html', club=club,
-                               competitions=competitions,
+                               competitions=sort_competitions_by_date(
+                                   competitions),
                                club_bookings=club_bookings)
     competition['numberOfPlaces'] = int(competition['numberOfPlaces']) - placesRequired
     club['points'] = int(club['points']) - placesRequired
@@ -150,7 +197,8 @@ def purchasePlaces():
         k[1]: v for k, v in bookings.items() if k[0] == club['name']
     }
     return render_template('welcome.html', club=club,
-                           competitions=competitions,
+                           competitions=sort_competitions_by_date(
+                               competitions),
                            club_bookings=club_bookings)
 
 
