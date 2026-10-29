@@ -1,129 +1,149 @@
 <!DOCTYPE html>
-<html lang="fr" data-bs-theme="light">
+<html lang="fr" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Réservation – {{ competition['name'] }} | GUDLFT</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .booking-card {
-            border: none;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
-        }
-        .card-header-gradient {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            padding: 2rem;
-            color: #fff;
-        }
-        .card-header-gradient h1 { font-weight: 700; font-size: 1.4rem; }
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102,126,234,0.25);
-        }
-        .btn-confirm {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: none; color: #fff; font-weight: 600;
-            border-radius: 10px; padding: 0.7rem 2rem;
-            transition: all 0.3s;
-        }
-        .btn-confirm:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102,126,234,0.5);
-            color: #fff;
-        }
-        .places-info {
-            background: rgba(102,126,234,0.1);
-            border: 1px solid rgba(102,126,234,0.3);
-            border-radius: 12px; padding: 1rem;
-        }
-        [data-bs-theme="dark"] .booking-card { background: #1e1e2e; }
-    </style>
+    <link href="{{ url_for('static', filename='app.css') }}" rel="stylesheet">
 </head>
 <body>
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-sm-10 col-md-7 col-lg-5">
-            <div class="card booking-card">
-                <!-- Header -->
-                <div class="card-header-gradient">
-                    <div class="d-flex align-items-center gap-3 mb-2">
-                        <span style="font-size:2rem;">🎟️</span>
-                        <div>
-                            <p class="mb-0 opacity-75 small text-uppercase tracking-wide">Réservation</p>
-                            <h1 class="mb-0">{{ competition['name'] }}</h1>
-                        </div>
-                    </div>
-                </div>
+{% set places = competition['numberOfPlaces']|int %}
+{% set points = club['points']|int %}
+<div class="booking-shell">
+    <div class="page-nav">
+        <a class="brand" href="{{ url_for('index') }}">
+            <span class="brand-mark"><i class="bi bi-lightning-charge-fill"></i></span>
+            <span class="brand-text">GUDLFT<small>Club workspace</small></span>
+        </a>
+        <div class="d-flex align-items-center gap-2">
+            <span class="points-chip"><i class="bi bi-star-fill"></i>{{ points }} pts</span>
+            <button id="darkModeBtn" class="icon-btn" title="Basculer le thème">
+                <i class="bi bi-moon-stars"></i>
+            </button>
+        </div>
+    </div>
 
-                <!-- Body -->
-                <div class="card-body p-4">
-                    <div class="places-info mb-4">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-people-fill text-primary me-3 fs-4"></i>
-                            <div>
-                                <div class="fw-600 fs-5">{{ competition['numberOfPlaces'] }}</div>
-                                <div class="text-muted small">places disponibles</div>
-                            </div>
-                        </div>
-                    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mt-3">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                <i class="bi bi-{% if category == 'success' %}check-circle{% else %}exclamation-triangle{% endif %}-fill me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
 
-                    <form action="/purchasePlaces" method="post">
-                        <input type="hidden" name="club" value="{{ club['name'] }}">
-                        <input type="hidden" name="competition" value="{{ competition['name'] }}">
-
-                        <div class="mb-4">
-                            <label for="places" class="form-label fw-500">
-                                <i class="bi bi-hash me-1"></i> Nombre de places
-                            </label>
-                            <input type="number" name="places" id="places"
-                                   class="form-control form-control-lg rounded-3"
-                                   min="1" max="{{ max_places_allowed }}"
-                                   placeholder="1"
-                                   {% if max_places_allowed < 1 %}disabled{% endif %}
-                                   required>
-                            <div class="form-text mt-1">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Vous pouvez réserver au maximum {{ max_places_allowed }} place(s).
-                            </div>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-confirm btn-primary fs-5">
-                                <i class="bi bi-check-lg me-2"></i> Confirmer la réservation
-                            </button>
-                            <a href="javascript:history.back()"
-                               class="btn btn-outline-secondary rounded-3">
-                                <i class="bi bi-arrow-left me-2"></i> Retour au tableau de bord
-                            </a>
-                        </div>
-                    </form>
-                </div>
+    <div class="booking-grid">
+        <section class="glass-card summary-card">
+            <div class="d-flex align-items-center justify-content-between gap-2">
+                <div class="comp-icon"><i class="bi bi-calendar-event"></i></div>
+                {% if places > 0 %}
+                <span class="badge-soft success"><i class="bi bi-check-circle-fill"></i> Disponible</span>
+                {% else %}
+                <span class="badge-soft danger"><i class="bi bi-x-circle-fill"></i> Complet</span>
+                {% endif %}
             </div>
 
-            <p class="text-center mt-3 text-white-50 small">
-                Club : <strong class="text-white">{{ club['name'] }}</strong>
-                — {{ club['points'] }} points disponibles
-            </p>
-        </div>
+            <span class="eyebrow d-block mt-4">Réservation</span>
+            <h1 class="summary-title">{{ competition['name'] }}</h1>
+            <p class="text-muted-custom small mb-4">Vérifiez les informations avant de confirmer votre réservation.</p>
+
+            <div class="summary-row">
+                <span><i class="bi bi-calendar3 me-2"></i>Date</span>
+                <strong>{{ competition['date'] | format_date }}</strong>
+            </div>
+            <div class="summary-row">
+                <span><i class="bi bi-people me-2"></i>Places restantes</span>
+                <strong>{{ places }}</strong>
+            </div>
+            <div class="summary-row">
+                <span><i class="bi bi-star me-2"></i>Vos points</span>
+                <strong>{{ points }}</strong>
+            </div>
+            <div class="summary-row">
+                <span><i class="bi bi-sliders me-2"></i>Maximum autorisé</span>
+                <strong>{{ max_places_allowed }} place(s)</strong>
+            </div>
+
+            <div class="progress-track mt-4">
+                <span style="width: {{ (max_places_allowed * 100 / 12)|round|int }}%"></span>
+            </div>
+        </section>
+
+        <section class="glass-card form-card">
+            <span class="eyebrow">Finalisation</span>
+            <h2 class="summary-title mb-1">Combien de places ?</h2>
+            <p class="text-muted-custom small mb-4">Le nombre de places est plafonné selon vos points, le stock disponible et la limite de 12 places.</p>
+
+            <form action="{{ url_for('purchasePlaces') }}" method="post">
+                <input type="hidden" name="club" value="{{ club['name'] }}">
+                <input type="hidden" name="competition" value="{{ competition['name'] }}">
+
+                <div class="mb-4">
+                    <label for="places" class="form-label">
+                        <i class="bi bi-ticket-perforated me-1"></i> Nombre de places
+                    </label>
+                    <input type="number" name="places" id="places"
+                           class="form-control form-control-lg"
+                           min="1" max="{{ max_places_allowed }}"
+                           placeholder="1"
+                           {% if max_places_allowed < 1 %}disabled{% endif %}
+                           required>
+                    <div class="form-text mt-2">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Vous pouvez réserver au maximum {{ max_places_allowed }} place(s).
+                    </div>
+                </div>
+
+                {% if max_places_allowed < 1 %}
+                <div class="alert alert-danger small" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Aucune place supplémentaire ne peut être réservée pour cette compétition.
+                </div>
+                {% endif %}
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-gradient btn-lg"
+                            {% if max_places_allowed < 1 %}disabled{% endif %}>
+                        <i class="bi bi-check-lg me-2"></i>Confirmer la réservation
+                    </button>
+                    <a href="javascript:history.back()" class="btn btn-ghost">
+                        <i class="bi bi-arrow-left me-2"></i>Retour au tableau de bord
+                    </a>
+                </div>
+            </form>
+        </section>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const saved = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-bs-theme', saved);
+    const html = document.documentElement;
+    const darkBtn = document.getElementById('darkModeBtn');
+
+    function applyTheme(theme) {
+        html.setAttribute('data-bs-theme', theme);
+        darkBtn.innerHTML = theme === 'dark'
+            ? '<i class="bi bi-sun-fill"></i>'
+            : '<i class="bi bi-moon-stars"></i>';
+        localStorage.setItem('theme', theme);
+    }
+
+    applyTheme(localStorage.getItem('theme') || 'dark');
+
+    darkBtn.addEventListener('click', () => {
+        const current = html.getAttribute('data-bs-theme');
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
 </script>
 </body>
 </html>

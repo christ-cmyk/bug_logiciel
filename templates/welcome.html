@@ -1,355 +1,281 @@
 <!DOCTYPE html>
-<html lang="fr" data-bs-theme="light">
+<html lang="fr" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord | GUDLFT</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-
-        /* Navbar */
-        .navbar-brand span { font-weight: 700; font-size: 1.2rem; }
-        .points-badge {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: #fff;
-            border-radius: 20px;
-            padding: 4px 14px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        /* Competition cards */
-        .competition-card {
-            border: none;
-            border-radius: 16px;
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
-            overflow: hidden;
-        }
-        .competition-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 16px 40px rgba(0,0,0,0.15) !important;
-        }
-        .card-accent {
-            height: 5px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-        }
-
-        /* Badges */
-        .badge-available {
-            background: linear-gradient(135deg, #11998e, #38ef7d);
-            color: #fff; font-weight: 600;
-        }
-        .badge-low {
-            background: linear-gradient(135deg, #f7971e, #ffd200);
-            color: #333; font-weight: 600;
-        }
-        .badge-full {
-            background: linear-gradient(135deg, #cb2d3e, #ef473a);
-            color: #fff; font-weight: 600;
-        }
-
-        /* Btn reserve */
-        .btn-reserve {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: none;
-            color: #fff;
-            font-weight: 600;
-            border-radius: 10px;
-            transition: all 0.3s;
-        }
-        .btn-reserve:hover { opacity: 0.9; transform: scale(1.03); color: #fff; }
-
-        /* Dark mode toggle */
-        #darkModeBtn { transition: all 0.3s; }
-
-        /* Dashboard stats */
-        .stat-card {
-            border: none;
-            border-radius: 18px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
-        }
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.14);
-        }
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.35rem;
-            color: #fff;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-        .stat-value {
-            font-size: 1.6rem;
-            font-weight: 700;
-            line-height: 1;
-        }
-        .points-progress {
-            height: 6px;
-            border-radius: 999px;
-            background: rgba(102, 126, 234, 0.15);
-        }
-        .points-progress .progress-bar {
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            border-radius: 999px;
-        }
-        [data-bs-theme="dark"] .stat-card {
-            background: #1e1e2e;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-        }
-        [data-bs-theme="dark"] .competition-card {
-            background: #1e1e2e;
-        }
-
-        /* Tabs */
-        .nav-tabs .nav-link {
-            font-weight: 500;
-            border-radius: 10px 10px 0 0;
-        }
-        .nav-tabs .nav-link.active {
-            font-weight: 700;
-        }
-
-        /* Bookings table */
-        .history-section {
-            border-radius: 16px;
-            overflow: hidden;
-        }
-    </style>
+    <link href="{{ url_for('static', filename='app.css') }}" rel="stylesheet">
 </head>
-<body>
+<body class="app-body">
+{% set points = club['points']|int %}
+{% set points_pct = points if points <= 100 else 100 %}
+{% set ns = namespace(available=0, booked=0) %}
+{% for comp in competitions %}
+    {% if comp['numberOfPlaces']|int > 0 %}
+        {% set ns.available = ns.available + 1 %}
+    {% endif %}
+{% endfor %}
+{% for qty in club_bookings.values() %}
+    {% set ns.booked = ns.booked + qty %}
+{% endfor %}
 
-<!-- NAVBAR -->
-<nav class="navbar navbar-expand-lg shadow-sm sticky-top"
-     style="backdrop-filter:blur(10px); background: rgba(var(--bs-body-bg-rgb),0.95);">
-    <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('index') }}">
-            <span style="font-size:1.6rem;">🏋️</span>
-            <span>GUDLFT</span>
+<div class="app-shell">
+    <aside class="sidebar d-none d-lg-flex">
+        <a class="brand" href="{{ url_for('index') }}">
+            <span class="brand-mark"><i class="bi bi-lightning-charge-fill"></i></span>
+            <span class="brand-text">GUDLFT<small>Club workspace</small></span>
         </a>
-        <div class="d-flex align-items-center gap-3 ms-auto">
-            <span class="points-badge">
-                <i class="bi bi-star-fill me-1"></i>
-                {{ club['points'] }} pts
-            </span>
-            <span class="text-muted small d-none d-md-inline">
-                <i class="bi bi-person-circle me-1"></i>{{ club['email'] }}
-            </span>
-            <button id="darkModeBtn" class="btn btn-outline-secondary btn-sm rounded-pill px-3"
-                    title="Basculer le mode sombre">
-                <i class="bi bi-moon-fill"></i>
-            </button>
-            <a href="{{ url_for('logout') }}"
-               class="btn btn-outline-danger btn-sm rounded-pill px-3">
-                <i class="bi bi-box-arrow-right me-1"></i>Déconnexion
+
+        <nav class="side-nav">
+            <span class="side-label">Menu</span>
+            <a class="side-link active" href="#">
+                <i class="bi bi-grid-1x2-fill"></i> Tableau de bord
+            </a>
+            <a class="side-link" href="#competitions">
+                <i class="bi bi-calendar-event"></i> Compétitions
+            </a>
+            <a class="side-link" href="#bookings">
+                <i class="bi bi-ticket-perforated"></i> Mes réservations
+            </a>
+            <a class="side-link" href="{{ url_for('points') }}">
+                <i class="bi bi-trophy"></i> Classement
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-mini">
+                <div class="avatar">{{ club['name'][0] }}</div>
+                <div>
+                    <strong>{{ club['name'] }}</strong>
+                    <span>{{ club['email'] }}</span>
+                </div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn btn-ghost w-100">
+                <i class="bi bi-box-arrow-right me-2"></i>Déconnexion
             </a>
         </div>
-    </div>
-</nav>
+    </aside>
 
-<!-- FLASH MESSAGES -->
-<div class="container mt-3">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3" role="alert">
-            <i class="bi bi-{% if category == 'success' %}check-circle{% else %}exclamation-triangle{% endif %}-fill me-2"></i>
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endfor %}
-    {% endif %}
-    {% endwith %}
-</div>
+    <div class="main-panel">
+        <header class="topbar">
+            <div class="d-flex align-items-center gap-3">
+                <a class="brand d-lg-none" href="{{ url_for('index') }}">
+                    <span class="brand-mark"><i class="bi bi-lightning-charge-fill"></i></span>
+                    <span class="brand-text">GUDLFT<small>Club workspace</small></span>
+                </a>
+                <div class="d-none d-md-block">
+                    <p class="topbar-kicker">Espace secrétaire</p>
+                    <h1 class="topbar-title">Tableau de bord</h1>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="points-chip">
+                    <i class="bi bi-star-fill"></i>{{ points }} pts
+                </span>
+                <a href="{{ url_for('points') }}" class="icon-btn d-lg-none" title="Classement">
+                    <i class="bi bi-trophy"></i>
+                </a>
+                <button id="darkModeBtn" class="icon-btn" title="Basculer le thème">
+                    <i class="bi bi-moon-stars"></i>
+                </button>
+                <a href="{{ url_for('logout') }}" class="icon-btn d-lg-none" title="Déconnexion">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+            </div>
+        </header>
 
-<!-- MAIN -->
-<main class="container py-4">
+        <main class="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-4">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <i class="bi bi-{% if category == 'success' %}check-circle{% else %}exclamation-triangle{% endif %}-fill me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% endwith %}
 
-    <!-- Page header -->
-    <div class="d-flex align-items-center mb-4">
-        <div>
-            <h1 class="fs-3 fw-700 mb-0">Tableau de bord</h1>
-            <p class="text-muted small mb-0">Gérez vos réservations de compétitions</p>
-        </div>
-        <a href="{{ url_for('points') }}" class="btn btn-outline-secondary ms-auto rounded-pill">
-            <i class="bi bi-trophy me-1"></i> Classement
-        </a>
-    </div>
+            <section class="hero-card">
+                <div>
+                    <span class="eyebrow">Saison 2026</span>
+                    <h2>Bonjour, {{ club['name'] }}</h2>
+                    <p>Pilotez vos réservations, suivez votre solde de points et gardez une longueur d'avance sur les prochaines compétitions.</p>
+                </div>
+                <div class="hero-points">
+                    <span>Solde disponible</span>
+                    <strong>{{ points }} <small>pts</small></strong>
+                    <div class="progress-track">
+                        <span style="width: {{ points_pct }}%"></span>
+                    </div>
+                </div>
+            </section>
 
-    <!-- POINTS COUNTER / STATS -->
-    {% set points = club['points']|int %}
-    {% set points_pct = points if points <= 100 else 100 %}
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-md-4">
-            <div class="card stat-card h-100">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon"><i class="bi bi-star-fill"></i></div>
-                    <div class="flex-grow-1">
-                        <div class="text-muted small text-uppercase">Points du club</div>
-                        <div class="stat-value mb-2">{{ points }}</div>
-                        <div class="progress points-progress">
-                            <div class="progress-bar" role="progressbar"
-                                 style="width: {{ points_pct }}%"
-                                 aria-valuenow="{{ points }}"
-                                 aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="row g-3 mt-1">
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="stat-card d-flex align-items-center gap-3">
+                        <div class="stat-icon"><i class="bi bi-star-fill"></i></div>
+                        <div>
+                            <div class="stat-label">Points du club</div>
+                            <div class="stat-value">{{ points }}</div>
+                            <div class="stat-hint">Solde utilisable</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="stat-card d-flex align-items-center gap-3">
+                        <div class="stat-icon blue"><i class="bi bi-calendar-event"></i></div>
+                        <div>
+                            <div class="stat-label">Compétitions</div>
+                            <div class="stat-value">{{ ns.available }}</div>
+                            <div class="stat-hint">Disponibles à la réservation</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="stat-card d-flex align-items-center gap-3">
+                        <div class="stat-icon green"><i class="bi bi-ticket-perforated"></i></div>
+                        <div>
+                            <div class="stat-label">Réservations</div>
+                            <div class="stat-value">{{ club_bookings|length }}</div>
+                            <div class="stat-hint">Compétitions réservées</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="stat-card d-flex align-items-center gap-3">
+                        <div class="stat-icon amber"><i class="bi bi-people-fill"></i></div>
+                        <div>
+                            <div class="stat-label">Places réservées</div>
+                            <div class="stat-value">{{ ns.booked }}</div>
+                            <div class="stat-hint">Toutes compétitions confondues</div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-12 col-md-4">
-            <div class="card stat-card h-100">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background: linear-gradient(135deg,#11998e,#38ef7d);">
-                        <i class="bi bi-calendar-event"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted small text-uppercase">Compétitions</div>
-                        <div class="stat-value">{{ competitions|length }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-md-4">
-            <div class="card stat-card h-100">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background: linear-gradient(135deg,#f7971e,#ffd200); color:#333;">
-                        <i class="bi bi-ticket-perforated"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted small text-uppercase">Mes réservations</div>
-                        <div class="stat-value">{{ club_bookings|length }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- FILTER TABS -->
-    <ul class="nav nav-tabs mb-4" id="compTabs" role="tablist">
-        <li class="nav-item">
-            <button class="nav-link active" id="tab-all"
-                    onclick="filterCards('all')" type="button">
-                <i class="bi bi-grid me-1"></i> Toutes
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="tab-available"
-                    onclick="filterCards('available')" type="button">
-                <i class="bi bi-check-circle me-1"></i> Disponibles
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="tab-full"
-                    onclick="filterCards('full')" type="button">
-                <i class="bi bi-x-circle me-1"></i> Complètes
-            </button>
-        </li>
-    </ul>
-
-    <!-- COMPETITIONS GRID -->
-    <div class="row row-cols-1 row-cols-md-2 g-4" id="compGrid">
-        {% for comp in competitions %}
-        {% set places = comp['numberOfPlaces']|int %}
-        <div class="col comp-card-wrapper {% if places == 0 %}is-full{% else %}is-available{% endif %}">
-            <div class="card competition-card shadow-sm h-100">
-                <div class="card-accent"></div>
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <h2 class="card-title fs-5 fw-700 mb-0">{{ comp['name'] }}</h2>
-                        {% if places == 0 %}
-                        <span class="badge badge-full rounded-pill px-3">Complet</span>
-                        {% elif places < 5 %}
-                        <span class="badge badge-low rounded-pill px-3">⚠️ Presque complet</span>
-                        {% else %}
-                        <span class="badge badge-available rounded-pill px-3">✅ Disponible</span>
-                        {% endif %}
-                    </div>
-                    <ul class="list-unstyled text-muted small mb-4">
-                        <li class="mb-1">
-                            <i class="bi bi-calendar3 me-2"></i>
-                            {{ comp['date'] | format_date }}
-                        </li>
-                        <li>
-                            <i class="bi bi-people me-2"></i>
-                            <strong>{{ places }}</strong> place{{ 's' if places > 1 else '' }} restante{{ 's' if places > 1 else '' }}
-                        </li>
-                    </ul>
-                    {% if places > 0 %}
-                    <a href="{{ url_for('book', competition=comp['name'], club=club['name']) }}"
-                       class="btn btn-reserve w-100">
-                        <i class="bi bi-ticket-perforated me-2"></i> Réserver
-                    </a>
-                    {% else %}
-                    <button class="btn btn-secondary w-100 disabled" disabled>
-                        <i class="bi bi-lock me-2"></i> Complet
+            <div class="section-head" id="competitions">
+                <div>
+                    <h2 class="section-title">Compétitions à venir</h2>
+                    <p class="section-sub">Les échéances les plus proches apparaissent en premier.</p>
+                </div>
+                <div class="filter-pills nav" id="compTabs" role="tablist">
+                    <button class="nav-link active" id="tab-all" onclick="filterCards('all')" type="button">
+                        <i class="bi bi-grid me-1"></i>Toutes
                     </button>
-                    {% endif %}
+                    <button class="nav-link" id="tab-available" onclick="filterCards('available')" type="button">
+                        <i class="bi bi-check-circle me-1"></i>Disponibles
+                    </button>
+                    <button class="nav-link" id="tab-full" onclick="filterCards('full')" type="button">
+                        <i class="bi bi-x-circle me-1"></i>Complètes
+                    </button>
                 </div>
             </div>
-        </div>
-        {% endfor %}
-    </div>
 
-    <!-- NO RESULTS MESSAGE -->
-    <div id="noResults" class="text-center text-muted py-5 d-none">
-        <i class="bi bi-search fs-1"></i>
-        <p class="mt-3">Aucune compétition dans cette catégorie.</p>
-    </div>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4" id="compGrid">
+                {% for comp in competitions %}
+                {% set places = comp['numberOfPlaces']|int %}
+                {% set fill = places * 4 if places <= 25 else 100 %}
+                <div class="col comp-card-wrapper {% if places == 0 %}is-full{% else %}is-available{% endif %}">
+                    <article class="competition-card">
+                        <div class="comp-body">
+                            <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
+                                <div class="comp-icon"><i class="bi bi-calendar-event"></i></div>
+                                {% if places == 0 %}
+                                <span class="badge-soft danger"><i class="bi bi-x-circle-fill"></i> Complet</span>
+                                {% elif places < 5 %}
+                                <span class="badge-soft warning"><i class="bi bi-exclamation-triangle-fill"></i> Presque complet</span>
+                                {% else %}
+                                <span class="badge-soft success"><i class="bi bi-check-circle-fill"></i> Disponible</span>
+                                {% endif %}
+                            </div>
 
-    <!-- BOOKING HISTORY -->
-    <div class="mt-5">
-        <h2 class="fs-4 fw-700 mb-3">
-            <i class="bi bi-clock-history me-2 text-primary"></i>Mes réservations
-        </h2>
-        {% if club_bookings %}
-        <div class="card history-section shadow-sm">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th><i class="bi bi-trophy me-2"></i>Compétition</th>
-                            <th class="text-end"><i class="bi bi-ticket me-2"></i>Places réservées</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for comp_name, qty in club_bookings.items() %}
-                        <tr>
-                            <td class="fw-500">{{ comp_name }}</td>
-                            <td class="text-end">
-                                <span class="badge bg-primary rounded-pill">{{ qty }}</span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                            <h3 class="comp-title">{{ comp['name'] }}</h3>
+
+                            <div class="comp-meta">
+                                <span><i class="bi bi-calendar3 me-2"></i>{{ comp['date'] | format_date }}</span>
+                                <span><i class="bi bi-people me-2"></i><strong>{{ places }}</strong> place{{ 's' if places > 1 else '' }} restante{{ 's' if places > 1 else '' }}</span>
+                            </div>
+
+                            <div class="progress-track mb-3">
+                                <span style="width: {{ fill }}%"></span>
+                            </div>
+
+                            <div class="mt-auto">
+                                {% if places > 0 %}
+                                <a href="{{ url_for('book', competition=comp['name'], club=club['name']) }}"
+                                   class="btn btn-gradient w-100">
+                                    <i class="bi bi-ticket-perforated me-2"></i>Réserver
+                                </a>
+                                {% else %}
+                                <button class="btn btn-ghost w-100 disabled" disabled>
+                                    <i class="bi bi-lock me-2"></i>Complet
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                {% endfor %}
             </div>
-        </div>
-        {% else %}
-        <div class="card shadow-sm">
-            <div class="card-body text-center py-4 text-muted">
-                <i class="bi bi-calendar-x fs-2 mb-2 d-block"></i>
-                Aucune réservation pour le moment.
-            </div>
-        </div>
-        {% endif %}
-    </div>
 
-</main>
+            <div id="noResults" class="empty-state d-none">
+                <i class="bi bi-search"></i>
+                Aucune compétition dans cette catégorie.
+            </div>
+
+            <div class="section-head" id="bookings">
+                <div>
+                    <h2 class="section-title">Mes réservations</h2>
+                    <p class="section-sub">Le récapitulatif de vos places confirmées.</p>
+                </div>
+            </div>
+
+            {% if club_bookings %}
+            <div class="data-card">
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th><i class="bi bi-trophy me-2"></i>Compétition</th>
+                                <th class="text-end"><i class="bi bi-ticket me-2"></i>Places réservées</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for comp_name, qty in club_bookings.items() %}
+                            <tr>
+                                <td class="fw-semibold">{{ comp_name }}</td>
+                                <td class="text-end">
+                                    <span class="badge-soft success">{{ qty }} place{{ 's' if qty > 1 else '' }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="data-card">
+                <div class="empty-state">
+                    <i class="bi bi-calendar-x"></i>
+                    Aucune réservation pour le moment.
+                </div>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // ── Dark Mode ──────────────────────────────────────────────────────────────
     const html = document.documentElement;
     const darkBtn = document.getElementById('darkModeBtn');
 
@@ -357,19 +283,17 @@
         html.setAttribute('data-bs-theme', theme);
         darkBtn.innerHTML = theme === 'dark'
             ? '<i class="bi bi-sun-fill"></i>'
-            : '<i class="bi bi-moon-fill"></i>';
+            : '<i class="bi bi-moon-stars"></i>';
         localStorage.setItem('theme', theme);
     }
 
-    // Apply on load
-    applyTheme(localStorage.getItem('theme') || 'light');
+    applyTheme(localStorage.getItem('theme') || 'dark');
 
     darkBtn.addEventListener('click', () => {
         const current = html.getAttribute('data-bs-theme');
         applyTheme(current === 'dark' ? 'light' : 'dark');
     });
 
-    // ── Competition Filter Tabs ────────────────────────────────────────────────
     function filterCards(filter) {
         const cards = document.querySelectorAll('.comp-card-wrapper');
         const noResults = document.getElementById('noResults');
@@ -390,7 +314,6 @@
 
         noResults.classList.toggle('d-none', visible > 0);
 
-        // Update active tab
         document.querySelectorAll('#compTabs .nav-link').forEach(btn => {
             btn.classList.remove('active');
         });
